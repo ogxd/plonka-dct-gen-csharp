@@ -46,11 +46,11 @@ def tfm_run(name, y, x, code, scale_factor=None):
 def get_code(n, fn):
     global call_num
     call_num = 0
-    x = sp.Matrix([sp.Symbol('src[%*d*src_stridea]' % (len(str(n)), i)) for i in range(n)])
-    y = sp.Matrix([sp.Symbol('dst[%*d*dst_stridea]' % (len(str(n)), i)) for i in range(n)])
+    x = sp.Matrix([sp.Symbol('src[%*d * src_stridea]' % (len(str(n)), i)) for i in range(n)])
+    y = sp.Matrix([sp.Symbol('dst[%*d * dst_stridea]' % (len(str(n)), i)) for i in range(n)])
     code = []
     tfm_run(fn, y, x, code)
-    indent = 8 * ' '
+    indent = 12 * ' '
     outcode = []
     aliases = {}
     for (dst, src) in code:
@@ -83,10 +83,10 @@ def get_code(n, fn):
 
         line = '%s = %s;' % (dst, src)
         if '[' not in dst:
-            line = 'const float ' + line
+            line = 'float ' + line
 
         # drop no-op lines such as "const float a = b;" with aliases
-        if re.match(r'^const float x[0-9a-f]+_[0-9a-f]+x = x[0-9a-f]+_[0-9a-f]+x;$', line):
+        if re.match(r'^float x[0-9a-f]+_[0-9a-f]+x = x[0-9a-f]+_[0-9a-f]+x;$', line):
             #outcode.append(indent + '//' + line)
             aliases[dst] = aliases.get(src, src)
             continue
@@ -94,6 +94,9 @@ def get_code(n, fn):
         # apply any aliases
         for var, rep in aliases.items():
             line = line.replace(var, rep)
+
+        # add 'f' suffix to float literals
+        line = re.sub(r'(?<![\w.])(\d+\.\d+)(?![\w.])', r'\1f', line)
 
         line = indent + line
         outcode.append(line)
@@ -137,18 +140,17 @@ def get_code(n, fn):
     return ret
 
 def write_dct_code(n):
-    outsrc = open('template.c').read() #% tpldata
+    outsrc = open('template.cs').read() #% tpldata
     outsrc = outsrc.replace('%N%', str(n))
     fdct = get_code(n, 'cosII')
     idct = get_code(n, 'cosIII')
     outsrc = outsrc.replace('%CODE_FDCT%', fdct)
     outsrc = outsrc.replace('%CODE_IDCT%', idct)
-    # create directory if it doesn't exist
-    if not os.path.exists('gen/c'):
-        os.makedirs('gen/c')
+    if not os.path.exists('gen/cs'):
+        os.makedirs('gen/cs')
     if not os.path.exists('refs'):
         os.makedirs('refs')
-    open('gen/c/dct%d.c' % n, 'w').write(outsrc)
+    open('gen/cs/Dct%d.cs' % n, 'w').write(outsrc)
     open('refs/fdct%d' % n, 'w').write(fdct)
     open('refs/idct%d' % n, 'w').write(idct)
 

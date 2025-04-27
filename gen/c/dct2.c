@@ -4,7 +4,7 @@
 
 /********* generated code snippet *********/
 
-#define N %N%
+#define N 2
 
 static inline void fdct_1d(float *dst, const float *src,
                            int dst_stridea, int dst_strideb,
@@ -13,7 +13,8 @@ static inline void fdct_1d(float *dst, const float *src,
     int i;
 
     for (i = 0; i < N; i++) {
-%CODE_FDCT%
+        dst[0*dst_stridea] = 0.707106781186547*src[0*src_stridea] + 0.707106781186547*src[1*src_stridea];
+        dst[1*dst_stridea] = 0.707106781186547*src[0*src_stridea] - 0.707106781186547*src[1*src_stridea];
         dst += dst_strideb;
         src += src_strideb;
     }
@@ -33,7 +34,8 @@ static inline void idct_1d(float *dst, const float *src,
     int i;
 
     for (i = 0; i < N; i++) {
-%CODE_IDCT%
+        dst[0*dst_stridea] = 0.707106781186547*src[0*src_stridea] + 0.707106781186547*src[1*src_stridea];
+        dst[1*dst_stridea] = 0.707106781186547*src[0*src_stridea] - 0.707106781186547*src[1*src_stridea];
         dst += dst_strideb;
         src += src_strideb;
     }
